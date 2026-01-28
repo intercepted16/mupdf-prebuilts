@@ -80,7 +80,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install cmake harfbuzz freetype libjpeg libpng bzip2 zlib curl openssl lcms2-mt ccache
+          brew install cmake harfbuzz freetype libjpeg libpng bzip2 zlib curl openssl ccache
 
       - name: Clone MuPDF
         run: |
