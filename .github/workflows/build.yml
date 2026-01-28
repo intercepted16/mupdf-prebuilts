@@ -12,11 +12,11 @@ on:
           - linux
           - macos-arm
 
-        mupdf_version:
-          type: string
-          description: "MuPDF version to build"
-          required: true,
-          default: "1.25.0"
+      mupdf_version:
+        type: string
+        description: "MuPDF version to build"
+        required: true
+        default: "1.25.0"
 
 env:
   MUPDF_VERSION: ${{ github.event.inputs.mupdf_version }}
@@ -44,8 +44,7 @@ jobs:
 
               rm -rfd ./mupdf/
             
-              git clone --depth 1 --branch ${{ env.MUPDF_BRANCH }} \
-                --recurse-submodules https://github.com/ArtifexSoftware/mupdf.git
+              git clone --depth 1 --branch ${{ env.MUPDF_BRANCH }} --recurse-submodules https://github.com/ArtifexSoftware/mupdf.git
 
               cd mupdf
               CC='ccache gcc' make -j\$(nproc) shared=yes build=release libs
@@ -85,8 +84,7 @@ jobs:
       - name: Clone MuPDF
         run: |
             rm -rfd mupdf/
-            git clone --depth 1 --branch ${{ env.MUPDF_BRANCH }} \
-              --recurse-submodules https://github.com/ArtifexSoftware/mupdf.git
+            git clone --depth 1 --branch ${{ env.MUPDF_BRANCH }} --recurse-submodules https://github.com/ArtifexSoftware/mupdf.git
 
       - name: Build MuPDF
         run: |
@@ -104,7 +102,7 @@ jobs:
     name: Publish to GitHub Release
     needs: [build-linux, build-macos-arm]
     runs-on: ubuntu-latest
-    if: always() && (needs.build-linux.result == 'success' || needs.build-macos-intel.result == 'success' || needs.build-macos-arm.result == 'success')
+    if: always() && (needs.build-linux.result == 'success' || needs.build-macos-arm.result == 'success')
     permissions:
       contents: write
     steps:
