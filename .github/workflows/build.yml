@@ -84,10 +84,9 @@ jobs:
 
       - name: Clone MuPDF
         run: |
-          if [ ! -d "mupdf" ]; then
-              git clone --depth 1 --branch ${{ env.MUPDF_BRANCH }} \
-                --recurse-submodules https://github.com/ArtifexSoftware/mupdf.git
-          fi
+            rm -rfd mupdf/
+            git clone --depth 1 --branch ${{ env.MUPDF_BRANCH }} \
+              --recurse-submodules https://github.com/ArtifexSoftware/mupdf.git
 
       - name: Build MuPDF
         run: |
