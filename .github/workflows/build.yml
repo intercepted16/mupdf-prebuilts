@@ -186,8 +186,12 @@ jobs:
             echo 'LIBRARY libmupdf.dll'
             echo 'EXPORTS'
             objdump -p mupdf-artifacts/libmupdf.dll \
-              | awk '/^[[:space:]]*\\[[[:space:]]*[0-9]+\\][[:space:]]+\\+base\\[[[:space:]]*[0-9]+\\][[:space:]]+[0-9a-fA-F]+[[:space:]]+[A-Za-z_][A-Za-z0-9_]*$/ { print "  " $NF }'
+              | awk '/^[[:space:]]*\[[[:space:]]*[0-9]+\][[:space:]]+\+base\[[[:space:]]*[0-9]+\][[:space:]]+[0-9a-fA-F]+[[:space:]]+[A-Za-z_][A-Za-z0-9_]*$/ { print "  " $NF }'
           } > mupdf-artifacts/libmupdf.def
+          if [ "$(wc -l < mupdf-artifacts/libmupdf.def)" -lt 100 ]; then
+            cat mupdf-artifacts/libmupdf.def
+            exit 1
+          fi
           dlltool \
             --dllname libmupdf.dll \
             --def mupdf-artifacts/libmupdf.def \
