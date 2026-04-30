@@ -121,6 +121,7 @@ jobs:
             python
             unzip
             mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-binutils
             mingw-w64-ucrt-x86_64-pkgconf
             mingw-w64-ucrt-x86_64-harfbuzz
             mingw-w64-ucrt-x86_64-freetype
@@ -181,13 +182,25 @@ jobs:
             find mupdf/build -type f -maxdepth 4 | sort
             exit 1
           fi
+          {
+            echo 'LIBRARY libmupdf.dll'
+            echo 'EXPORTS'
+            objdump -p mupdf-artifacts/libmupdf.dll \
+              | awk '/^[[:space:]]*\\[[[:space:]]*[0-9]+\\][[:space:]]+\\+base\\[[[:space:]]*[0-9]+\\][[:space:]]+[0-9a-fA-F]+[[:space:]]+[A-Za-z_][A-Za-z0-9_]*$/ { print "  " $NF }'
+          } > mupdf-artifacts/libmupdf.def
+          dlltool \
+            --dllname libmupdf.dll \
+            --def mupdf-artifacts/libmupdf.def \
+            --output-lib mupdf-artifacts/libmupdf.dll.a
           ls -lh mupdf-artifacts
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: mupdf-windows-x86_64
-          path: mupdf-artifacts/*
+          path: |
+            mupdf-artifacts/libmupdf.dll
+            mupdf-artifacts/libmupdf.dll.a
           if-no-files-found: error
 
   publish:
