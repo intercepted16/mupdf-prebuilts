@@ -198,6 +198,8 @@ jobs:
             --output-lib mupdf-artifacts/libmupdf.dll.a
           cp "${MINGW_PREFIX}/bin/libgcc_s_seh-1.dll" \
             mupdf-artifacts/libgcc_s_seh-1.dll
+          cp "${MINGW_PREFIX}/bin/libwinpthread-1.dll" \
+            mupdf-artifacts/libwinpthread-1.dll
           ls -lh mupdf-artifacts
 
       - name: Upload artifacts
@@ -208,6 +210,7 @@ jobs:
             mupdf-artifacts/libmupdf.dll
             mupdf-artifacts/libmupdf.dll.a
             mupdf-artifacts/libgcc_s_seh-1.dll
+            mupdf-artifacts/libwinpthread-1.dll
           if-no-files-found: error
 
   publish:
