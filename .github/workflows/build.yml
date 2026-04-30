@@ -11,6 +11,7 @@ on:
           - all
           - linux
           - macos-arm
+          - windows
 
       mupdf_version:
         type: string
@@ -98,11 +99,64 @@ jobs:
           path: mupdf/build/shared-release/*.dylib*
           if-no-files-found: error
 
+  build-windows:
+    name: Build MuPDF (Windows x86_64)
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows'
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git
+            make
+            ccache
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-harfbuzz
+            mingw-w64-ucrt-x86_64-freetype
+            mingw-w64-ucrt-x86_64-libjpeg-turbo
+            mingw-w64-ucrt-x86_64-openjpeg2
+            mingw-w64-ucrt-x86_64-libpng
+            mingw-w64-ucrt-x86_64-bzip2
+            mingw-w64-ucrt-x86_64-zlib
+            mingw-w64-ucrt-x86_64-curl
+            mingw-w64-ucrt-x86_64-openssl
+
+      - name: Clone MuPDF
+        run: |
+          rm -rf mupdf
+          git clone --depth 1 --branch ${{ env.MUPDF_BRANCH }} --recurse-submodules https://github.com/ArtifexSoftware/mupdf.git
+
+      - name: Build MuPDF
+        run: |
+          cd mupdf
+          CC='ccache gcc' make -j$(nproc) shared=yes build=release libs
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p mupdf-artifacts
+          find mupdf/build -type f \( -name 'libmupdf.dll' -o -name 'libmupdf.dll.a' \) -exec cp {} mupdf-artifacts/ \;
+          ls -lh mupdf-artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mupdf-windows-x86_64
+          path: mupdf-artifacts/*
+          if-no-files-found: error
+
   publish:
     name: Publish to GitHub Release
-    needs: [build-linux, build-macos-arm]
+    needs: [build-linux, build-macos-arm, build-windows]
     runs-on: ubuntu-latest
-    if: always() && (needs.build-linux.result == 'success' || needs.build-macos-arm.result == 'success')
+    if: always() && (needs.build-linux.result == 'success' || needs.build-macos-arm.result == 'success' || needs.build-windows.result == 'success')
     permissions:
       contents: write
     steps:
@@ -118,6 +172,7 @@ jobs:
           mkdir -p release
           cp artifacts/mupdf-linux-x86_64/* release/ 2>/dev/null || true
           cp artifacts/mupdf-macos-arm64/* release/ 2>/dev/null || true
+          cp artifacts/mupdf-windows-x86_64/* release/ 2>/dev/null || true
           
           echo "Files to release:"
           ls -lh release/
@@ -135,5 +190,6 @@ jobs:
             **Included:**
             - Linux x86_64 (manylinux2014)
             - macOS arm64 (Apple Silicon)
+            - Windows x86_64 (MinGW/UCRT)
             
             Download and use in your builds.
