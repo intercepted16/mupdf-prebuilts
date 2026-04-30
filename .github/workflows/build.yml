@@ -137,7 +137,7 @@ jobs:
       - name: Build MuPDF
         run: |
           cd mupdf
-          CC='ccache gcc' make -j$(nproc) shared=yes build=release libs
+          CC='ccache gcc' make -j$(nproc) shared=yes build=release XCFLAGS='-msse4.1' libs
 
       - name: Collect artifacts
         run: |
