@@ -132,23 +132,55 @@ jobs:
             mingw-w64-ucrt-x86_64-curl
             mingw-w64-ucrt-x86_64-openssl
 
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: .ccache
+          key: ccache-windows-${{ env.MUPDF_VERSION }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-windows-${{ env.MUPDF_VERSION }}-
+
+      - name: Cache MuPDF checkout
+        uses: actions/cache@v4
+        with:
+          path: mupdf
+          key: mupdf-src-${{ env.MUPDF_VERSION }}
+
       - name: Clone MuPDF
         run: |
-          rm -rf mupdf
-          git clone --depth 1 --branch ${{ env.MUPDF_BRANCH }} --recurse-submodules https://github.com/ArtifexSoftware/mupdf.git
+          if [ -d mupdf/.git ]; then
+            git -C mupdf reset --hard
+            git -C mupdf clean -ffd
+            git -C mupdf submodule update --init --recursive
+          else
+            rm -rf mupdf
+            git clone --depth 1 --branch ${{ env.MUPDF_BRANCH }} --recurse-submodules https://github.com/ArtifexSoftware/mupdf.git
+          fi
 
       - name: Build MuPDF
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
           which python
           which unzip
           which pkg-config
           cd mupdf
           CC='ccache gcc' make -j$(nproc) shared=yes build=release XCFLAGS='-msse4.1' libs
+          ccache -s
 
       - name: Collect artifacts
         run: |
           mkdir -p mupdf-artifacts
-          find mupdf/build -type f \( -name 'libmupdf.dll' -o -name 'libmupdf.dll.a' \) -exec cp {} mupdf-artifacts/ \;
+          if [ -f mupdf/build/shared-release/libmupdf.dll ]; then
+            cp mupdf/build/shared-release/libmupdf.dll mupdf-artifacts/libmupdf.dll
+          elif [ -f mupdf/build/shared-release/libmupdf.so.27.0 ]; then
+            cp mupdf/build/shared-release/libmupdf.so.27.0 mupdf-artifacts/libmupdf.dll
+          elif [ -f mupdf/build/shared-release/libmupdf.so ]; then
+            cp mupdf/build/shared-release/libmupdf.so mupdf-artifacts/libmupdf.dll
+          else
+            find mupdf/build -type f -maxdepth 4 | sort
+            exit 1
+          fi
           ls -lh mupdf-artifacts
 
       - name: Upload artifacts
