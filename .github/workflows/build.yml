@@ -118,7 +118,10 @@ jobs:
             git
             make
             ccache
+            python
+            unzip
             mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-pkgconf
             mingw-w64-ucrt-x86_64-harfbuzz
             mingw-w64-ucrt-x86_64-freetype
             mingw-w64-ucrt-x86_64-libjpeg-turbo
@@ -136,6 +139,9 @@ jobs:
 
       - name: Build MuPDF
         run: |
+          which python
+          which unzip
+          which pkg-config
           cd mupdf
           CC='ccache gcc' make -j$(nproc) shared=yes build=release XCFLAGS='-msse4.1' libs
 
