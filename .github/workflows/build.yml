@@ -196,7 +196,7 @@ jobs:
             --dllname libmupdf.dll \
             --def mupdf-artifacts/libmupdf.def \
             --output-lib mupdf-artifacts/libmupdf.dll.a
-          cp "$(dirname "$(gcc -print-libgcc-file-name)")/libgcc_s_seh-1.dll" \
+          cp "${MINGW_PREFIX}/bin/libgcc_s_seh-1.dll" \
             mupdf-artifacts/libgcc_s_seh-1.dll
           ls -lh mupdf-artifacts
 
